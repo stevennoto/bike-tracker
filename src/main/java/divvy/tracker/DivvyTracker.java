@@ -83,7 +83,6 @@ public class DivvyTracker {
 			}
 			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
 			System.out.println(stationBeanList.getStation(2).getAvailableBikes());
-// TODO: getting nulls back. Search not working???
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

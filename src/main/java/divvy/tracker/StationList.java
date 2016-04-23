@@ -3,21 +3,30 @@ package divvy.tracker;
 import java.util.List;
 
 public class StationList {
-	private List<Station> stationList;
+    private String executionTime;
+	private List<Station> stationBeanList;
+
+	public String getExecutionTime() {
+		return executionTime;
+	}
+
+	public void setExecutionTime(String executionTime) {
+		this.executionTime = executionTime;
+	}
 	
 	public List<Station> getStationList() {
-		return stationList;
+		return stationBeanList;
 	}
 	
 	public void setStationList(List<Station> stationList) {
-		this.stationList = stationList;
+		this.stationBeanList = stationList;
 	}
 	
 	public Station getStation(long id) {
-		if (stationList == null || stationList.isEmpty()) {
+		if (stationBeanList == null || stationBeanList.isEmpty()) {
 			return null;
 		}
-		for (Station station : stationList) {
+		for (Station station : stationBeanList) {
 			if (station != null && station.getId() == id) {
 				return station;
 			}
@@ -26,10 +35,10 @@ public class StationList {
 	}
 	
 	public Station getStation(String name) {
-		if (stationList == null || stationList.isEmpty()) {
+		if (stationBeanList == null || stationBeanList.isEmpty()) {
 			return null;
 		}
-		for (Station station : stationList) {
+		for (Station station : stationBeanList) {
 			if (station != null && station.getStationName() != null && station.getStationName().equalsIgnoreCase(name)) {
 				return station;
 			}
