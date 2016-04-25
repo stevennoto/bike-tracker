@@ -11,6 +11,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -73,48 +78,27 @@ public class DivvyTracker {
 		}
 	}
 	public static void main(String[] args) {
-		try {
-			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
-			BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
-			String line;
-			String webpageText = "";
-			while ((line = br.readLine()) != null) {
-				webpageText += line;
-			}
-			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-			System.out.println(stationBeanList.getStation(2).getAvailableBikes());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
+//			BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
+//			String line;
+//			String webpageText = "";
+//			while ((line = br.readLine()) != null) {
+//				webpageText += line;
+//			}
+//			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
+//			Long[] idsToLoad = { 174L, 192L };
+//			List<Long> idList = new ArrayList<>();
+//			idList.addAll(Arrays.asList(idsToLoad));
+//			List<Station> stations = stationBeanList.getStations(idList);
+//			System.out.println(stations.get(0).getAvailableBikes());
+//			System.out.println(stations.get(1).getAvailableBikes());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 		
-//		SpringApplication application = new SpringApplication(DivvyTracker.class);
-//		application.setApplicationContextClass(AnnotationConfigApplicationContext.class);
-//		SpringApplication.run(DivvyTracker.class, args);
-		
-		
-		
-//    {
-//"executionTime": "2015-12-07 10:24:01 AM",
-//"stationBeanList": [
-//{
-//"id": 2,
-//"stationName": "Buckingham Fountain",
-//"availableDocks": 32,
-//"totalDocks": 35,
-//"latitude": 41.876428,
-//"longitude": -87.620339,
-//"statusValue": "In Service",
-//"statusKey": 1,
-//"availableBikes": 3,
-//"stAddress1": "Buckingham Fountain",
-//"stAddress2": "",
-//"city": "Chicago",
-//"postalCode": "",
-//"location": "",
-//"altitude": "",
-//"testStation": false,
-//"lastCommunicationTime": null,
-//"landMark": "541"
-//},
+		SpringApplication application = new SpringApplication(DivvyTracker.class);
+		application.setApplicationContextClass(AnnotationConfigApplicationContext.class);
+		SpringApplication.run(DivvyTracker.class, args);
 	}
 }
