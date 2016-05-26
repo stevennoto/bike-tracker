@@ -19,21 +19,30 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.*;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
 @EnableAutoConfiguration
+@Configuration
+@PropertySource("classpath:/divvy/tracker/stations.properties")
 public class DivvyTracker {
+	@Autowired
+	Environment env;
 
 	@RequestMapping("/")
 	@ResponseBody
 	public String index() {
-		return "Hello world, sup?";
+		return "Hello world, sup?" + testThing();
 	}
 	
 	@RequestMapping("/divvy")
@@ -59,17 +68,28 @@ public class DivvyTracker {
 			while ((line = br.readLine()) != null) {
 				webpageText += line;
 			}
-			JsonObject jsonObject = new JsonParser().parse(webpageText).getAsJsonObject();
-			String executionTime = jsonObject.get("executionTime").getAsString();
-
-			JsonArray stations = jsonObject.getAsJsonArray("stationBeanList");
-			JsonObject firstStation = stations.get(0).getAsJsonObject();
-			String firstStationName = firstStation.get("stationName").toString();
-
+//			JsonObject jsonObject = new JsonParser().parse(webpageText).getAsJsonObject();
+//			String executionTime = jsonObject.get("executionTime").getAsString();
+//
+//			JsonArray stations = jsonObject.getAsJsonArray("stationBeanList");
+//			JsonObject firstStation = stations.get(0).getAsJsonObject();
+//			String firstStationName = firstStation.get("stationName").toString();
 //                Map<String, Object> attributes = new HashMap<>();
 //                attributes.put("message", "Found dataz! executionTime=" + executionTime + ", first station name=" + firstStationName);
 //                return new ModelAndView(attributes, "index.ftl");
-			return "Found dataz! executionTime=" + executionTime + ", first station name=" + firstStationName;
+//			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
+			
+			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
+			Long[] idsToLoad = { 174L, 192L, 18L, 212L, 181L, 100L };
+			List<Long> idList = new ArrayList<>();
+			idList.addAll(Arrays.asList(idsToLoad));
+			List<Station> stations = stationBeanList.getStations(idList);
+			String returnString = "";
+			for (Station station : stations) {
+				returnString += getStationDetails(station);
+				returnString += "<br/><br/>";
+			}
+			return returnString;
 		} catch (IOException e) {
 //                Map<String, Object> attributes = new HashMap<>();
 //                attributes.put("message", "Error: " + e.getMessage());
@@ -77,6 +97,24 @@ public class DivvyTracker {
 			return "Error: " + e.getMessage();
 		}
 	}
+	
+	private String getStationDetails(Station station) {
+		String details = "Station '" + station.getStationName() + "': "
+				+ station.getAvailableBikes() + " bikes, "
+				+ station.getAvailableDocks() + " docks";
+		return details;
+	}
+	
+	@Value( "${divvytracker.source.station.ids}" )
+	private String thing;
+	public String testThing() {
+		if (env == null) return "env=null";
+//		String thing = env.getRequiredProperty("divvytracker.source.station.ids");
+				//env.getRequiredProperty("divvytracker.source.station.ids")
+		return thing;
+//		System.out.println("prop:" + thing != null ? thing : "null"); // , String.class
+	}
+	
 	public static void main(String[] args) {
 //		try {
 //			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
@@ -100,5 +138,7 @@ public class DivvyTracker {
 		SpringApplication application = new SpringApplication(DivvyTracker.class);
 		application.setApplicationContextClass(AnnotationConfigApplicationContext.class);
 		SpringApplication.run(DivvyTracker.class, args);
+		DivvyTracker dt = new DivvyTracker();
+		dt.testThing();
 	}
 }
