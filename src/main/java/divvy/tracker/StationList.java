@@ -1,10 +1,7 @@
 package divvy.tracker;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class StationList {
     private String executionTime;
@@ -38,14 +35,17 @@ public class StationList {
 		return null;
 	}
 	
-	public List<Station> getStations(Collection<Long> ids) {
+	public List<Station> getStations(List<Long> ids) {
 		List<Station> stations = new ArrayList<>();
 		if (stationBeanList == null || stationBeanList.isEmpty()) {
 			return stations;
 		}
-		for (Station station : stationBeanList) {
-			if (station != null && ids.contains(station.getId())) {
-				stations.add(station);
+		for (Long id : ids) {
+			for (Station station : stationBeanList) {
+				if (station != null && id != null && id.equals(station.getId())) {
+					stations.add(station);
+					break;
+				}
 			}
 		}
 		return stations;
