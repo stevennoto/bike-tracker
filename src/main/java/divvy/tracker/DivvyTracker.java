@@ -104,7 +104,7 @@ public class DivvyTracker {
 				returnString += "<br/><br/>";
 			}
 				returnString += "<br/><br/>";
-			stations = stationBeanList.getStations(idsToLoadOrigin);
+			stations = stationBeanList.getStations(idsToLoadDestination);
 			for (Station station : stations) {
 				returnString += getStationDetails(station);
 				returnString += "<br/><br/>";
