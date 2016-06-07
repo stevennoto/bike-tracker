@@ -12,10 +12,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -38,18 +35,26 @@ import org.springframework.web.bind.annotation.*;
 public class DivvyTracker {
 	@Autowired
 	Environment env;
-
-	@RequestMapping("/")
-	@ResponseBody
-	public String index() {
-		return "Hello world, sup?" + testThing();
-	}
 	
-	@RequestMapping("/divvy")
+	// Properties:
+	
+	@Value( "${divvytracker.stations.url}" )
+	private String stationsUrl;
+	
+	@Value( "${divvytracker.origin.station.ids}" )
+	private String originStationIds;
+	
+	@Value( "${divvytracker.destination.station.ids}" )
+	private String destinationStationIds;
+	
+	// Routings:
+	
+	@RequestMapping("/")
 	@ResponseBody
 	public String divvy() {
 		try {
-			URL url = new URL("http://www.divvybikes.com/stations/json");
+			// todo: check properties			
+			URL url = new URL(stationsUrl);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			HttpURLConnection.setFollowRedirects(true);
 			conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
@@ -68,6 +73,16 @@ public class DivvyTracker {
 			while ((line = br.readLine()) != null) {
 				webpageText += line;
 			}
+
+			// Offline test:
+//			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
+//			BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
+//			String line;
+//			String webpageText = "";
+//			while ((line = br.readLine()) != null) {
+//				webpageText += line;
+//			}
+			
 //			JsonObject jsonObject = new JsonParser().parse(webpageText).getAsJsonObject();
 //			String executionTime = jsonObject.get("executionTime").getAsString();
 //
@@ -80,11 +95,16 @@ public class DivvyTracker {
 //			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
 			
 			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-			Long[] idsToLoad = { 174L, 192L, 18L, 212L, 181L, 100L };
-			List<Long> idList = new ArrayList<>();
-			idList.addAll(Arrays.asList(idsToLoad));
-			List<Station> stations = stationBeanList.getStations(idList);
+			List<Long> idsToLoadOrigin = getStationIds(originStationIds);
+			List<Long> idsToLoadDestination = getStationIds(destinationStationIds);
+			List<Station> stations = stationBeanList.getStations(idsToLoadOrigin);
 			String returnString = "";
+			for (Station station : stations) {
+				returnString += getStationDetails(station);
+				returnString += "<br/><br/>";
+			}
+				returnString += "<br/><br/>";
+			stations = stationBeanList.getStations(idsToLoadOrigin);
 			for (Station station : stations) {
 				returnString += getStationDetails(station);
 				returnString += "<br/><br/>";
@@ -99,46 +119,41 @@ public class DivvyTracker {
 	}
 	
 	private String getStationDetails(Station station) {
-		String details = "Station '" + station.getStationName() + "': "
+		String details = "Station '" + station.getStationName() + "' ("
+				+ station.getId() + "): "
 				+ station.getAvailableBikes() + " bikes, "
 				+ station.getAvailableDocks() + " docks";
 		return details;
 	}
 	
-	@Value( "${divvytracker.source.station.ids}" )
-	private String thing;
-	public String testThing() {
-		if (env == null) return "env=null";
-//		String thing = env.getRequiredProperty("divvytracker.source.station.ids");
-				//env.getRequiredProperty("divvytracker.source.station.ids")
-		return thing;
-//		System.out.println("prop:" + thing != null ? thing : "null"); // , String.class
+	private List<Long> getStationIds(String propertyString) {
+		List<Long> listStationIds = new ArrayList<>();
+		if (propertyString == null) {
+			return listStationIds;
+		}
+		String stationIdsString[] = propertyString.split(",");
+		for (String stationIdString: stationIdsString) {
+			try {
+				listStationIds.add(Long.parseLong(stationIdString));
+			} catch (NumberFormatException e) {}
+		}
+		return listStationIds;
 	}
 	
+//	@RequestMapping("/test")
+//	@ResponseBody
+//	public String testThing() {
+//		if (env == null) return "env=null";
+////		String thing = env.getRequiredProperty("divvytracker.source.station.ids");
+//				//env.getRequiredProperty("divvytracker.source.station.ids")
+//		return thing;
+////		System.out.println("prop:" + thing != null ? thing : "null"); // , String.class
+//	}
+	
 	public static void main(String[] args) {
-//		try {
-//			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
-//			BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
-//			String line;
-//			String webpageText = "";
-//			while ((line = br.readLine()) != null) {
-//				webpageText += line;
-//			}
-//			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-//			Long[] idsToLoad = { 174L, 192L };
-//			List<Long> idList = new ArrayList<>();
-//			idList.addAll(Arrays.asList(idsToLoad));
-//			List<Station> stations = stationBeanList.getStations(idList);
-//			System.out.println(stations.get(0).getAvailableBikes());
-//			System.out.println(stations.get(1).getAvailableBikes());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-		
 		SpringApplication application = new SpringApplication(DivvyTracker.class);
 		application.setApplicationContextClass(AnnotationConfigApplicationContext.class);
 		SpringApplication.run(DivvyTracker.class, args);
 		DivvyTracker dt = new DivvyTracker();
-		dt.testThing();
 	}
 }
