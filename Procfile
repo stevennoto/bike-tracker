@@ -1,1 +1,1 @@
-web: java -cp target/classes:target/dependency/* divvy.tracker.DivvyTracker
+web: java -Dserver.port=$PORT -cp target/classes:target/dependency/* divvy.tracker.DivvyTracker
