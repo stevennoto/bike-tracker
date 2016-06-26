@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @EnableAutoConfiguration
 @Configuration
-@PropertySource("classpath:/divvy/tracker/stations.properties")
+@PropertySource(name="stationsProperties",value="classpath:/divvy/tracker/stations.properties")
 public class DivvyTracker {
 	@Autowired
 	Environment env;
@@ -46,6 +46,9 @@ public class DivvyTracker {
 	
 	@Value( "${divvytracker.destination.station.ids}" )
 	private String destinationStationIds;
+	
+	@Value("#{T(java.util.Arrays).asList('${divvytracker.stations}')}")
+	private List<String> stationInfoList;
 	
 	// Routings:
 	
@@ -95,20 +98,28 @@ public class DivvyTracker {
 //			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
 			
 			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-			List<Long> idsToLoadOrigin = getStationIds(originStationIds);
-			List<Long> idsToLoadDestination = getStationIds(destinationStationIds);
-			List<Station> stations = stationBeanList.getStations(idsToLoadOrigin);
+//			List<Long> idsToLoadOrigin = getStationIds(originStationIds);
+//			List<Long> idsToLoadDestination = getStationIds(destinationStationIds);
 			String returnString = "";
-			for (Station station : stations) {
-				returnString += getStationDetails(station);
-				returnString += "<br/><br/>";
+			for (String stationInfo : stationInfoList) {
+				long stationId = getIdFromStationInfo(stationInfo);
+				String stationNickname = getNicknameFromStationInfo(stationInfo);
+				Station station = stationBeanList.getStation(stationId);
+				returnString += getStationDetailsString(station, stationNickname)
+						+ "<br/><br/>";
 			}
-				returnString += "<br/><br/>";
-			stations = stationBeanList.getStations(idsToLoadDestination);
-			for (Station station : stations) {
-				returnString += getStationDetails(station);
-				returnString += "<br/><br/>";
-			}
+//			List<Station> stations = stationBeanList.getStation(idsToLoadOrigin);
+//			for (Station station : stations) {
+//				returnString += getStationDetailsString(station);
+//				returnString += "<br/><br/>";
+//			}
+//				returnString += "<br/><br/>";
+//			stations = stationBeanList.getStation(idsToLoadDestination);
+//			for (Station station : stations) {
+//				returnString += getStationDetailsString(station);
+//				returnString += "<br/><br/>";
+//			}
+//			returnString += getNicknameFromStationInfo(stationInfoList.get(1) + "!!!");
 			return returnString;
 		} catch (IOException e) {
 //                Map<String, Object> attributes = new HashMap<>();
@@ -118,8 +129,8 @@ public class DivvyTracker {
 		}
 	}
 	
-	private String getStationDetails(Station station) {
-		String details = "Station '" + station.getStationName() + "' ("
+	private String getStationDetailsString(Station station, String stationNickname) {
+		String details = "<b>" + stationNickname + "</b> (" + station.getStationName() + ") (ID "
 				+ station.getId() + "): "
 				+ station.getAvailableBikes() + " bikes, "
 				+ station.getAvailableDocks() + " docks";
@@ -138,6 +149,24 @@ public class DivvyTracker {
 			} catch (NumberFormatException e) {}
 		}
 		return listStationIds;
+	}
+	
+	private long getIdFromStationInfo(String stationInfo) {
+		try {
+			return Long.parseLong(stationInfo.split("\\|")[0]);
+		} catch (NullPointerException|NumberFormatException e) {
+// log? throw?
+			return 0L;
+		}
+	}
+	
+	private String getNicknameFromStationInfo(String stationInfo) {
+		try {
+			return stationInfo.split("\\|")[1];
+		} catch (NullPointerException|NumberFormatException e) {
+// log? throw?
+			return "";
+		}
 	}
 	
 //	@RequestMapping("/test")

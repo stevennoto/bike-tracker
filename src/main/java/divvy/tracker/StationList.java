@@ -23,7 +23,7 @@ public class StationList {
 		this.stationBeanList = stationList;
 	}
 	
-	public Station getStations(long id) {
+	public Station getStation(long id) {
 		if (stationBeanList == null || stationBeanList.isEmpty()) {
 			return null;
 		}
