@@ -1,4 +1,4 @@
-package divvy.tracker;
+package divvy.tracker.json;
 
 public class Station {
 	private long id;

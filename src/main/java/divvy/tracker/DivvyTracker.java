@@ -1,9 +1,8 @@
 package divvy.tracker;
 
+import divvy.tracker.json.Station;
+import divvy.tracker.json.StationList;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -40,12 +38,6 @@ public class DivvyTracker {
 	
 	@Value( "${divvytracker.stations.url}" )
 	private String stationsUrl;
-	
-	@Value( "${divvytracker.origin.station.ids}" )
-	private String originStationIds;
-	
-	@Value( "${divvytracker.destination.station.ids}" )
-	private String destinationStationIds;
 	
 	@Value("#{T(java.util.Arrays).asList('${divvytracker.stations}')}")
 	private List<String> stationInfoList;
@@ -98,28 +90,14 @@ public class DivvyTracker {
 //			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
 			
 			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-//			List<Long> idsToLoadOrigin = getStationIds(originStationIds);
-//			List<Long> idsToLoadDestination = getStationIds(destinationStationIds);
 			String returnString = "";
 			for (String stationInfo : stationInfoList) {
-				long stationId = getIdFromStationInfo(stationInfo);
-				String stationNickname = getNicknameFromStationInfo(stationInfo);
+				StationDTO stationDTO = getStationFromProperty(stationInfo);
+				long stationId = stationDTO.getId();
 				Station station = stationBeanList.getStation(stationId);
-				returnString += getStationDetailsString(station, stationNickname)
+				returnString += getStationDetailsString(stationDTO, station)
 						+ "<br/><br/>";
 			}
-//			List<Station> stations = stationBeanList.getStation(idsToLoadOrigin);
-//			for (Station station : stations) {
-//				returnString += getStationDetailsString(station);
-//				returnString += "<br/><br/>";
-//			}
-//				returnString += "<br/><br/>";
-//			stations = stationBeanList.getStation(idsToLoadDestination);
-//			for (Station station : stations) {
-//				returnString += getStationDetailsString(station);
-//				returnString += "<br/><br/>";
-//			}
-//			returnString += getNicknameFromStationInfo(stationInfoList.get(1) + "!!!");
 			return returnString;
 		} catch (IOException e) {
 //                Map<String, Object> attributes = new HashMap<>();
@@ -129,43 +107,25 @@ public class DivvyTracker {
 		}
 	}
 	
-	private String getStationDetailsString(Station station, String stationNickname) {
-		String details = "<b>" + stationNickname + "</b> (" + station.getStationName() + ") (ID "
-				+ station.getId() + "): "
+	private String getStationDetailsString(StationDTO stationDTO, Station station) {
+		String details = "<b>" + stationDTO.getName() + "</b> (" + stationDTO.getAddress() + ") (ID "
+				+ stationDTO.getId() + "): "
 				+ station.getAvailableBikes() + " bikes, "
-				+ station.getAvailableDocks() + " docks";
+				+ station.getAvailableDocks() + " docks, "
+				+ station.getTotalDocks()+ " total docks";
 		return details;
 	}
 	
-	private List<Long> getStationIds(String propertyString) {
-		List<Long> listStationIds = new ArrayList<>();
-		if (propertyString == null) {
-			return listStationIds;
-		}
-		String stationIdsString[] = propertyString.split(",");
-		for (String stationIdString: stationIdsString) {
-			try {
-				listStationIds.add(Long.parseLong(stationIdString));
-			} catch (NumberFormatException e) {}
-		}
-		return listStationIds;
-	}
-	
-	private long getIdFromStationInfo(String stationInfo) {
+	private StationDTO getStationFromProperty(String stationInfo) {
 		try {
-			return Long.parseLong(stationInfo.split("\\|")[0]);
-		} catch (NullPointerException|NumberFormatException e) {
+			String[] stationStrings = stationInfo.split("\\|");
+			return new StationDTO(
+					Long.parseLong(stationStrings[0]),
+					stationStrings[1],
+					stationStrings[2]);
+		} catch (NullPointerException|NumberFormatException|ArrayIndexOutOfBoundsException e) {
 // log? throw?
-			return 0L;
-		}
-	}
-	
-	private String getNicknameFromStationInfo(String stationInfo) {
-		try {
-			return stationInfo.split("\\|")[1];
-		} catch (NullPointerException|NumberFormatException e) {
-// log? throw?
-			return "";
+			return null;
 		}
 	}
 	

@@ -1,4 +1,4 @@
-package divvy.tracker;
+package divvy.tracker.json;
 
 import java.util.ArrayList;
 import java.util.List;
