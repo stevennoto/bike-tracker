@@ -18,7 +18,7 @@ public class Station {
 	private String altitude;
 	private boolean testStation;
 	private String lastCommunicationTime;
-	private long landMark;
+	private String landMark;
 
 	public long getId() {
 		return id;
@@ -156,11 +156,11 @@ public class Station {
 		this.lastCommunicationTime = lastCommunicationTime;
 	}
 
-	public long getLandMark() {
+	public String getLandMark() {
 		return landMark;
 	}
 
-	public void setLandMark(long landMark) {
+	public void setLandMark(String landMark) {
 		this.landMark = landMark;
 	}
 	

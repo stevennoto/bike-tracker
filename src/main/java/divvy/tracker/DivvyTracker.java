@@ -36,6 +36,9 @@ public class DivvyTracker {
 	
 	// Properties:
 	
+	@Value( "${divvytracker.title}" )
+	private String appTitle;
+	
 	@Value( "${divvytracker.stations.url}" )
 	private String stationsUrl;
 	
@@ -48,7 +51,7 @@ public class DivvyTracker {
 	@ResponseBody
 	public String divvy() {
 		try {
-			// todo: check properties			
+			// Get Divvy info
 			URL url = new URL(stationsUrl);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			HttpURLConnection.setFollowRedirects(true);
@@ -68,6 +71,34 @@ public class DivvyTracker {
 			while ((line = br.readLine()) != null) {
 				webpageText += line;
 			}
+			
+			// Parse station info
+			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
+			
+			// Get web templates
+			String webTemplate = getTemplateFile("template.html");
+			String stationTemplate = getTemplateFile("template-station.html");
+			
+			// Fill in staion details for desired stations
+			String stationHtml = "";
+			for (String stationInfo : stationInfoList) {
+				StationDTO stationDTO = getStationFromProperty(stationInfo);
+				long stationId = stationDTO.getId();
+				Station station = stationBeanList.getStation(stationId);
+				String thisStationHtml = stationTemplate;
+				thisStationHtml = thisStationHtml.replace("{TITLE}", stationDTO.getName());
+				thisStationHtml = thisStationHtml.replace("{SUBTITLE}", stationDTO.getAddress());
+				thisStationHtml = thisStationHtml.replace("{NUM_BIKES}", "" + station.getAvailableBikes());
+				thisStationHtml = thisStationHtml.replace("{NUM_DOCKS}", "" + station.getAvailableDocks());
+				thisStationHtml = thisStationHtml.replace("{PERCENT_BIKES}", "" + (100 * station.getAvailableBikes() / station.getTotalDocks()));
+				thisStationHtml = thisStationHtml.replace("{PERCENT_DOCKS}", "" + (100 * station.getAvailableDocks() / station.getTotalDocks()));
+				stationHtml += thisStationHtml;
+			}
+			
+			// Fill in main template and return
+			webTemplate = webTemplate.replace("{PAGE_TITLE}", appTitle);
+			webTemplate = webTemplate.replace("{STATIONS}", stationHtml);
+			return webTemplate;
 
 			// Offline test:
 //			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
@@ -89,16 +120,6 @@ public class DivvyTracker {
 //                return new ModelAndView(attributes, "index.ftl");
 //			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
 			
-			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
-			String returnString = "";
-			for (String stationInfo : stationInfoList) {
-				StationDTO stationDTO = getStationFromProperty(stationInfo);
-				long stationId = stationDTO.getId();
-				Station station = stationBeanList.getStation(stationId);
-				returnString += getStationDetailsString(stationDTO, station)
-						+ "<br/><br/>";
-			}
-			return returnString;
 		} catch (IOException e) {
 //                Map<String, Object> attributes = new HashMap<>();
 //                attributes.put("message", "Error: " + e.getMessage());
@@ -129,20 +150,21 @@ public class DivvyTracker {
 		}
 	}
 	
-//	@RequestMapping("/test")
-//	@ResponseBody
-//	public String testThing() {
-//		if (env == null) return "env=null";
-////		String thing = env.getRequiredProperty("divvytracker.source.station.ids");
-//				//env.getRequiredProperty("divvytracker.source.station.ids")
-//		return thing;
-////		System.out.println("prop:" + thing != null ? thing : "null"); // , String.class
-//	}
+	private String getTemplateFile(String filename) throws IOException {
+		// TODO: improve reading code. Autowire via Spring?
+		InputStream inStream = DivvyTracker.class.getResourceAsStream(filename);
+		BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+		String line;
+		String fileText = "";
+		while ((line = br.readLine()) != null) {
+			fileText += line + "\n";
+		}
+		return fileText;
+	}
 	
 	public static void main(String[] args) {
 		SpringApplication application = new SpringApplication(DivvyTracker.class);
 		application.setApplicationContextClass(AnnotationConfigApplicationContext.class);
 		SpringApplication.run(DivvyTracker.class, args);
-		DivvyTracker dt = new DivvyTracker();
 	}
 }
