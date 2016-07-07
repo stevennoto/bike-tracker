@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -98,6 +99,8 @@ public class DivvyTracker {
 			// Fill in main template and return
 			webTemplate = webTemplate.replace("{PAGE_TITLE}", appTitle);
 			webTemplate = webTemplate.replace("{STATIONS}", stationHtml);
+			//SimpleDateFormat jsonDateFormat = new SimpleDateFormat("yyy-MM-dd hh:mm:ss ");
+			webTemplate = webTemplate.replace("{DATA_TIMESTAMP}", stationBeanList.getExecutionTime());
 			return webTemplate;
 
 			// Offline test:
