@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -52,28 +51,8 @@ public class DivvyTracker {
 	@ResponseBody
 	public String divvy() {
 		try {
-			// Get Divvy info
-			URL url = new URL(stationsUrl);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			HttpURLConnection.setFollowRedirects(true);
-			conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
-			String encoding = conn.getContentEncoding();
-			InputStream inStr = null;
-			if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
-				inStr = new GZIPInputStream(conn.getInputStream());
-			} else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
-				inStr = new InflaterInputStream(conn.getInputStream(), new Inflater(true));
-			} else {
-				inStr = conn.getInputStream();
-			}
-			BufferedReader br = new BufferedReader(new InputStreamReader(inStr));
-			String line;
-			String webpageText = "";
-			while ((line = br.readLine()) != null) {
-				webpageText += line;
-			}
-			
-			// Parse station info
+			// Get Divvy info, parse it
+			String webpageText = getWebpageSimple(stationsUrl);
 			StationList stationBeanList = new Gson().fromJson(webpageText, StationList.class);
 			
 			// Get web templates
@@ -96,48 +75,17 @@ public class DivvyTracker {
 				stationHtml += thisStationHtml;
 			}
 			
-			// Fill in main template and return
+			// Fill in main page template
 			webTemplate = webTemplate.replace("{PAGE_TITLE}", appTitle);
 			webTemplate = webTemplate.replace("{STATIONS}", stationHtml);
-			//SimpleDateFormat jsonDateFormat = new SimpleDateFormat("yyy-MM-dd hh:mm:ss ");
 			webTemplate = webTemplate.replace("{DATA_TIMESTAMP}", stationBeanList.getExecutionTime());
+			
+			// Return generated HTML
 			return webTemplate;
-
-			// Offline test:
-//			InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
-//			BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
-//			String line;
-//			String webpageText = "";
-//			while ((line = br.readLine()) != null) {
-//				webpageText += line;
-//			}
-			
-//			JsonObject jsonObject = new JsonParser().parse(webpageText).getAsJsonObject();
-//			String executionTime = jsonObject.get("executionTime").getAsString();
-//
-//			JsonArray stations = jsonObject.getAsJsonArray("stationBeanList");
-//			JsonObject firstStation = stations.get(0).getAsJsonObject();
-//			String firstStationName = firstStation.get("stationName").toString();
-//                Map<String, Object> attributes = new HashMap<>();
-//                attributes.put("message", "Found dataz! executionTime=" + executionTime + ", first station name=" + firstStationName);
-//                return new ModelAndView(attributes, "index.ftl");
-//			return "Found data! executionTime=" + executionTime + ", first station name=" + firstStationName;
-			
 		} catch (IOException e) {
-//                Map<String, Object> attributes = new HashMap<>();
-//                attributes.put("message", "Error: " + e.getMessage());
-//                return new ModelAndView(attributes, "index.ftl");
-			return "Error: " + e.getMessage();
+			// Return very basic error page
+			return "<html><body><h1>Error: " + e.getMessage() + "</h1></body></html>";
 		}
-	}
-	
-	private String getStationDetailsString(StationDTO stationDTO, Station station) {
-		String details = "<b>" + stationDTO.getName() + "</b> (" + stationDTO.getAddress() + ") (ID "
-				+ stationDTO.getId() + "): "
-				+ station.getAvailableBikes() + " bikes, "
-				+ station.getAvailableDocks() + " docks, "
-				+ station.getTotalDocks()+ " total docks";
-		return details;
 	}
 	
 	private StationDTO getStationFromProperty(String stationInfo) {
@@ -148,9 +96,48 @@ public class DivvyTracker {
 					stationStrings[1],
 					stationStrings[2]);
 		} catch (NullPointerException|NumberFormatException|ArrayIndexOutOfBoundsException e) {
-// log? throw?
 			return null;
 		}
+	}
+	
+	/**
+	 * Simple helper method to get a webpage, no muss no fuss
+	 * @param url URL to fetch
+	 * @return webpage contents
+	 * @throws exception if error reading webpage
+	 */
+	private String getWebpageSimple(String url) throws IOException {
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+		HttpURLConnection.setFollowRedirects(true);
+		conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
+		String encoding = conn.getContentEncoding();
+		InputStream inStr;
+		if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
+			inStr = new GZIPInputStream(conn.getInputStream());
+		} else if (encoding != null && encoding.equalsIgnoreCase("deflate")) {
+			inStr = new InflaterInputStream(conn.getInputStream(), new Inflater(true));
+		} else {
+			inStr = conn.getInputStream();
+		}
+		BufferedReader br = new BufferedReader(new InputStreamReader(inStr));
+		String line;
+		String webpageText = "";
+		while ((line = br.readLine()) != null) {
+			webpageText += line;
+		}
+		return webpageText;
+	}
+	
+	// Test version of above, for local development
+	private String getWebpageLocal(String url) throws IOException {
+		InputStream jsonStream = DivvyTracker.class.getResourceAsStream("divvy.json");
+		BufferedReader br = new BufferedReader(new InputStreamReader(jsonStream));
+		String line;
+		String webpageText = "";
+		while ((line = br.readLine()) != null) {
+			webpageText += line;
+		}
+		return webpageText;
 	}
 	
 	private String getTemplateFile(String filename) throws IOException {
