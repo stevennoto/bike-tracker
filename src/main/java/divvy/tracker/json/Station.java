@@ -9,6 +9,7 @@ public class Station {
 	private double longitude;
 	private String statusValue;
 	private long statusKey;
+	private String status;
 	private int availableBikes;
 	private String stAddress1;
 	private String stAddress2;
@@ -18,6 +19,7 @@ public class Station {
 	private String altitude;
 	private boolean testStation;
 	private String lastCommunicationTime;
+	private boolean is_renting;
 	private String landMark;
 
 	public long getId() {
@@ -82,6 +84,14 @@ public class Station {
 
 	public void setStatusKey(long statusKey) {
 		this.statusKey = statusKey;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public int getAvailableBikes() {
@@ -154,6 +164,14 @@ public class Station {
 
 	public void setLastCommunicationTime(String lastCommunicationTime) {
 		this.lastCommunicationTime = lastCommunicationTime;
+	}
+
+	public boolean isIs_renting() {
+		return is_renting;
+	}
+
+	public void setIs_renting(boolean is_renting) {
+		this.is_renting = is_renting;
 	}
 
 	public String getLandMark() {
