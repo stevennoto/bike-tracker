@@ -14,3 +14,9 @@ dist/
 nbdist/
 nb-configuration.xml
 .netbeans_automatic_build
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
