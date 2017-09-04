@@ -7,6 +7,12 @@ focusing on several locations of interest, and showing bike status in a mobile-f
 
 An instance of the app is live at https://spins-divvy.herokuapp.com/
 
+## Deploy to Heroku
+
+You can deploy this to your own Heroku account via this button:
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 ## Technology
 
 The app uses Spring Boot to power a basic Java webapp. The app downloads a JSON 

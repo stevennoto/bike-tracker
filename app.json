@@ -1,5 +1,6 @@
 {
-  "name": "Divvy Tracker",
-  "description": "A simple tracker for Divvy bike stations.",
+  "name": "Bike Tracker",
+  "description": "A simple tracker for Chicago Divvy bike stations.",
+  "repository": "https://github.com/stevennoto/bike-tracker",
   "image": "heroku/java"
 }
