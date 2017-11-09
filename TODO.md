@@ -5,7 +5,7 @@
 - [ ] add logo
 - [ ] change package/classes/properties to not say 'divvy'
 - [ ] more code clean up/refactoring
-- [ ] validate properties, files before use
+- [ ] validate properties and files before use
 - [ ] unit tests
 - [ ] integration tests with mocking (like LdapServiceTest.java)
 
