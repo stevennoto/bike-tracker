@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -59,26 +61,30 @@ public class DivvyTracker {
 			String webTemplate = getTemplateFile("template.html");
 			String stationTemplate = getTemplateFile("template-station.html");
 			
-			// Fill in staion details for desired stations
+			// Fill in station details for desired stations
 			String stationHtml = "";
 			for (String stationInfo : stationInfoList) {
 				StationDTO stationDTO = getStationFromProperty(stationInfo);
 				long stationId = stationDTO.getId();
-				Station station = stationBeanList.getStation(stationId);
+				Station station = stationBeanList.getStationById(stationId);
+				int bikes = station.bikes_available;
+				int docks = station.docks_available;
+				int totalDocks = bikes + docks;
 				String thisStationHtml = stationTemplate;
 				thisStationHtml = thisStationHtml.replace("{TITLE}", stationDTO.getName());
 				thisStationHtml = thisStationHtml.replace("{SUBTITLE}", stationDTO.getAddress());
-				thisStationHtml = thisStationHtml.replace("{NUM_BIKES}", "" + station.getAvailableBikes());
-				thisStationHtml = thisStationHtml.replace("{NUM_DOCKS}", "" + station.getAvailableDocks());
-				thisStationHtml = thisStationHtml.replace("{PERCENT_BIKES}", "" + (100 * station.getAvailableBikes() / station.getTotalDocks()));
-				thisStationHtml = thisStationHtml.replace("{PERCENT_DOCKS}", "" + (100 * station.getAvailableDocks() / station.getTotalDocks()));
+				thisStationHtml = thisStationHtml.replace("{NUM_BIKES}", "" + bikes);
+				thisStationHtml = thisStationHtml.replace("{NUM_DOCKS}", "" + docks);
+				thisStationHtml = thisStationHtml.replace("{PERCENT_BIKES}", "" + (100 * bikes / totalDocks));
+				thisStationHtml = thisStationHtml.replace("{PERCENT_DOCKS}", "" + (100 * docks / totalDocks));
 				stationHtml += thisStationHtml;
 			}
 			
 			// Fill in main page template
 			webTemplate = webTemplate.replace("{PAGE_TITLE}", appTitle);
 			webTemplate = webTemplate.replace("{STATIONS}", stationHtml);
-			webTemplate = webTemplate.replace("{DATA_TIMESTAMP}", stationBeanList.getExecutionTime());
+			String now = (new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")).format(new Date());
+			webTemplate = webTemplate.replace("{DATA_TIMESTAMP}", now);
 			
 			// Return generated HTML
 			return webTemplate;

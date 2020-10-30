@@ -5,7 +5,7 @@ focusing on several locations of interest, and showing bike status in a mobile-f
 
 ## Live Demo
 
-An instance of the app is live at https://spins-divvy.herokuapp.com/
+An instance of the app is live at https://divvy-bike-tracker.herokuapp.com/
 
 ## Deploy to Heroku
 
